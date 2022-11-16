@@ -100,7 +100,6 @@ func (r *Renderer) RenderRegion(sx, fx, sy, fy int, c chan int) {
 }
 
 func (r *Renderer) HorizontalLine(h float64) bool {
-	//fmt.Printf("r.g.MinH - %v,  r.g.MaxH %v, h - %v, int((r.g.MaxH-r.g.MinH)/100) - %v, int64(h/(r.g.MaxH-r.g.MinH)/100) - %v\n", r.g.MinH, r.g.MaxH, h, int((r.g.MaxH-r.g.MinH)/100), int64(h/((r.g.MaxH-r.g.MinH)/100)))
 	return int64(h/((r.g.MaxH-r.g.MinH)/350))%r.horizontalInterval == 0
 }
 
