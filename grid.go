@@ -21,12 +21,13 @@ type Grid struct {
 	MaxH                      float64 `json:"MaxH,omitempty"`
 	MinH                      float64 `json:"MinH,omitempty"`
 	HeightReductionPercentage int     `json:"height_reduction_percentage"`
+	PowOn                     bool    `json:"pow_on"`
 
 	grid []float64
 	mu   sync.Mutex
 }
 
-func NewGrid(roughness float64, l, w, hrp int) *Grid {
+func NewGrid(roughness float64, l, w, hrp int, powOn bool) *Grid {
 	g := &Grid{
 		Roughness:                 roughness,
 		Size:                      l * w / 10000,
@@ -34,6 +35,7 @@ func NewGrid(roughness float64, l, w, hrp int) *Grid {
 		Width:                     w + 1,
 		MinH:                      float64(w * l),
 		HeightReductionPercentage: hrp,
+		PowOn:                     powOn,
 	}
 	var cells []float64
 	for i := 0; i <= g.Width*g.Length; i++ {
@@ -143,7 +145,9 @@ func (g *Grid) diamond(x, y, size int, offset float64) {
 
 func (g *Grid) PowLandscape() {
 	for i := 0; i < len(g.grid); i++ {
-		g.grid[i] = math.Pow(g.grid[i], 2)
+		if g.PowOn {
+			g.grid[i] = math.Pow(g.grid[i], 2)
+		}
 		g.SetMaxH(g.grid[i])
 		g.SetMinH(g.grid[i])
 	}

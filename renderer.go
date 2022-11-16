@@ -26,25 +26,23 @@ type Renderer struct {
 	maxMountH  float64 // горы
 	snow       bool
 
-	horizontalInterval int64
-	alpha              uint8
+	horizontalInterval int64 // интервал между линиями высот (x*1/350)
+	alpha              uint8 // прозрачность
 
-	g  *Grid
-	gi *GridImage
+	g  *Grid      // рассчитанная карта высот
+	gi *GridImage // image
 }
 
 func NewRenderer(
-	g *Grid, waterHCoef, shoreH, forestH, meadowH, mountH float64, snow bool, horizontalInterval int64,
+	g *Grid, waterHCoef, shoreH, forestH, meadowH, mountH float64, horizontalInterval int64,
 ) *Renderer {
 
 	maxWaterH := g.MinH + (g.MaxH-g.MinH)*waterHCoef
-	maxShoreH := maxWaterH + (g.MaxH-maxWaterH)*shoreH
-	maxForestH := maxShoreH + (g.MaxH-maxShoreH)*forestH
-	maxMeadowH := maxForestH + (g.MaxH-maxForestH)*meadowH
-	maxMountH := (maxMeadowH) + g.MaxH
-	if snow {
-		maxMountH = maxMeadowH + (g.MaxH-maxMeadowH)*mountH
-	}
+	maxShoreH := maxWaterH + (g.MaxH-g.MinH)*shoreH
+	maxForestH := maxShoreH + (g.MaxH-g.MinH)*forestH
+	maxMeadowH := maxForestH + (g.MaxH-g.MinH)*meadowH
+	maxMountH := maxMeadowH + (g.MaxH-g.MinH)*mountH
+
 	fmt.Printf(
 		"maxWaterH := %v\n"+
 			"maxShoreH := %v\n"+
@@ -64,7 +62,6 @@ func NewRenderer(
 		maxForestH:         maxForestH,
 		maxMeadowH:         maxMeadowH,
 		maxMountH:          maxMountH,
-		snow:               snow,
 		horizontalInterval: horizontalInterval,
 		alpha:              0xff,
 		g:                  g,
@@ -75,7 +72,6 @@ func NewRenderer(
 			}),
 		},
 	}
-
 	return &r
 }
 
@@ -104,13 +100,14 @@ func (r *Renderer) RenderRegion(sx, fx, sy, fy int, c chan int) {
 }
 
 func (r *Renderer) HorizontalLine(h float64) bool {
-	return int64(h/7)%r.horizontalInterval == 0
+	//fmt.Printf("r.g.MinH - %v,  r.g.MaxH %v, h - %v, int((r.g.MaxH-r.g.MinH)/100) - %v, int64(h/(r.g.MaxH-r.g.MinH)/100) - %v\n", r.g.MinH, r.g.MaxH, h, int((r.g.MaxH-r.g.MinH)/100), int64(h/((r.g.MaxH-r.g.MinH)/100)))
+	return int64(h/((r.g.MaxH-r.g.MinH)/350))%r.horizontalInterval == 0
 }
 
 func (r *Renderer) GetPixelVanila(h float64) *color.RGBA {
-	//if r.HorizontalLine(h) {
-	//	return &color.RGBA{A: r.alpha}
-	//}
+	if r.HorizontalLine(h) {
+		return &color.RGBA{A: r.alpha}
+	}
 	if h <= r.maxWaterH {
 		return r.WaterPix(h)
 	}
@@ -172,7 +169,12 @@ func (r *Renderer) MountainPix(h float64) *color.RGBA {
 }
 
 func (r *Renderer) SnowPix(h float64) *color.RGBA {
-	return &color.RGBA{R: 242, G: 243, B: 244, A: r.alpha}
+	return &color.RGBA{
+		R: uint8(241 + (255-241)/(r.g.MaxH-r.maxMountH)*(h-r.maxMountH)),
+		G: uint8(242 + (255-242)/(r.g.MaxH-r.maxMountH)*(h-r.maxMountH)),
+		B: uint8(243 + (255-243)/(r.g.MaxH-r.maxMountH)*(h-r.maxMountH)),
+		A: r.alpha,
+	}
 }
 
 func (r *Renderer) saveImage(name string) {
