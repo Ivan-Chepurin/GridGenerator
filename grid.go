@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"math/rand"
@@ -18,10 +17,12 @@ type Grid struct {
 	Size                      int     `json:"Size,omitempty"`
 	Length                    int     `json:"length,omitempty"`
 	Width                     int     `json:"Width,omitempty"`
-	MaxH                      float64 `json:"MaxH,omitempty"`
-	MinH                      float64 `json:"MinH,omitempty"`
+	MaxH                      float64 `json:"MaxH,"`
+	MinH                      float64 `json:"MinH,"`
 	HeightReductionPercentage int     `json:"height_reduction_percentage"`
 	PowOn                     bool    `json:"pow_on"`
+	MaxHeightDiffs            HDFP    `json:"max_height_diffs"`
+	MinHeightDiffs            HDFP    `json:"min_height_diffs"`
 
 	grid []float64
 	mu   sync.Mutex
@@ -30,12 +31,24 @@ type Grid struct {
 func NewGrid(roughness float64, l, w, hrp int, powOn bool) *Grid {
 	g := &Grid{
 		Roughness:                 roughness,
-		Size:                      l * w / 10000,
+		Size:                      l * w / 1000,
 		Length:                    l + 1,
 		Width:                     w + 1,
 		MinH:                      float64(w * l),
 		HeightReductionPercentage: hrp,
 		PowOn:                     powOn,
+
+		MaxHeightDiffs: HDFP{},
+		MinHeightDiffs: HDFP{
+			float64(w * l),
+			float64(w * l),
+			float64(w * l),
+			float64(w * l),
+			float64(w * l),
+			float64(w * l),
+			float64(w * l),
+			float64(w * l),
+		},
 	}
 	var cells []float64
 	for i := 0; i <= g.Width*g.Length; i++ {
@@ -44,11 +57,6 @@ func NewGrid(roughness float64, l, w, hrp int, powOn bool) *Grid {
 	g.grid = cells
 	g.MakeLandscape()
 	g.PowLandscape()
-	data, err := json.MarshalIndent(g, "", "  ")
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(string(data))
 	return g
 }
 
@@ -76,7 +84,7 @@ func (g *Grid) SetMinH(h float64) {
 func (g *Grid) GetHC(x, y int) float64 {
 	if x < 0 || x > g.Length-1 || x == 0 || x == g.Length-1 ||
 		y < 0 || y > g.Width-1 || y == 0 || y == g.Width-1 {
-		return 10 + float64(rand.Intn(100))
+		return 10 + float64(32)
 	}
 	return g.grid[x+g.Length*y]
 }
@@ -143,12 +151,55 @@ func (g *Grid) diamond(x, y, size int, offset float64) {
 	g.SetH(x, y, ave+offset)
 }
 
-func (g *Grid) PowLandscape() {
-	for i := 0; i < len(g.grid); i++ {
-		if g.PowOn {
-			g.grid[i] = math.Pow(g.grid[i], 2)
+func (g *Grid) GetNeighborCells(x, y, d int) [][]float64 {
+	c := make([][]float64, d*2+1)
+	for i := 0; i < d*2+1; i++ { //y
+		c[i] = make([]float64, d*2+1)
+		for j := 0; j < d*2+1; j++ { //x
+			m := 0 //x
+			n := 0 //y
+			if i < d {
+				n = y - d + i
+			}
+			if i == d {
+				n = y
+			}
+			if i > d {
+				n = y + i - d
+			}
+			if j < d {
+				m = x - d + i
+			}
+			if j == d {
+				m = x
+			}
+			if j > d {
+				m = x + i - d
+			}
+			fmt.Printf("%v, %v, %v, %v\n", j, i, m, n)
+			c[j] = append(g.GetHC(m, n))
 		}
-		g.SetMaxH(g.grid[i])
-		g.SetMinH(g.grid[i])
+	}
+	return c
+}
+
+func (g *Grid) GetHDFP(x, y int) *HDFP {
+	nc := g.GetNeighborCells(x, y, 1)
+	d := NewHDFPbyPointSlice(g.GetHC(x, y), nc)
+	return d
+}
+
+func (g *Grid) PowLandscape() {
+	for y := 0; y < g.Length; y++ {
+		for x := 0; x < g.Width; x++ {
+			if g.PowOn {
+				g.SetH(x, y, math.Pow(g.GetHC(x, y), 2))
+			}
+			hdfp := g.GetHDFP(x, y)
+			g.MaxHeightDiffs.CompareMax(hdfp)
+			g.MinHeightDiffs.CompareMin(hdfp)
+			g.SetMaxH(g.GetHC(x, y))
+			g.SetMinH(g.GetHC(x, y))
+		}
 	}
 }
