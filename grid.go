@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"sync"
@@ -84,7 +83,7 @@ func (g *Grid) SetMinH(h float64) {
 func (g *Grid) GetHC(x, y int) float64 {
 	if x < 0 || x > g.Length-1 || x == 0 || x == g.Length-1 ||
 		y < 0 || y > g.Width-1 || y == 0 || y == g.Width-1 {
-		return 10 + float64(32)
+		return 10 + float64(rand.Intn(100))
 	}
 	return g.grid[x+g.Length*y]
 }
@@ -93,7 +92,9 @@ func (g *Grid) SetH(x, y int, h float64) {
 	if h < 0 {
 		h *= -1
 	}
-	g.grid[x+g.Length*y] = h
+	if g.GetHC(x, y) == 0 {
+		g.grid[x+g.Length*y] = h
+	}
 }
 
 func (g *Grid) MakeLandscape() {
@@ -151,41 +152,8 @@ func (g *Grid) diamond(x, y, size int, offset float64) {
 	g.SetH(x, y, ave+offset)
 }
 
-func (g *Grid) GetNeighborCells(x, y, d int) [][]float64 {
-	c := make([][]float64, d*2+1)
-	for i := 0; i < d*2+1; i++ { //y
-		c[i] = make([]float64, d*2+1)
-		for j := 0; j < d*2+1; j++ { //x
-			m := 0 //x
-			n := 0 //y
-			if i < d {
-				n = y - d + i
-			}
-			if i == d {
-				n = y
-			}
-			if i > d {
-				n = y + i - d
-			}
-			if j < d {
-				m = x - d + i
-			}
-			if j == d {
-				m = x
-			}
-			if j > d {
-				m = x + i - d
-			}
-			fmt.Printf("%v, %v, %v, %v\n", j, i, m, n)
-			c[j] = append(g.GetHC(m, n))
-		}
-	}
-	return c
-}
-
 func (g *Grid) GetHDFP(x, y int) *HDFP {
-	nc := g.GetNeighborCells(x, y, 1)
-	d := NewHDFPbyPointSlice(g.GetHC(x, y), nc)
+	d := NewHDFPbyGridPoint(g, x, y)
 	return d
 }
 

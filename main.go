@@ -7,10 +7,10 @@ import (
 )
 
 func main() {
-	w := int(math.Pow(2, 5))
-	g := NewGrid(4.8, w, w, 60, false)
+	w := int(math.Pow(2, 12))
+	g := NewGrid(0.9, w, w, 79, false)
 	r := NewRenderer(
-		g, 0.25, 0.01, 0.2, 0.15, 0.2, 528,
+		g, 0.30, 0.01, 0.2, 0.15, 0.2, 528,
 	)
 	data, err := json.MarshalIndent(g, "", "  ")
 	if err != nil {

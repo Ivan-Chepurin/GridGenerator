@@ -28,6 +28,20 @@ func NewHDFPbyPointSlice(h float64, s [][]float64) *HDFP {
 	return &d
 }
 
+func NewHDFPbyGridPoint(g *Grid, x, y int) *HDFP {
+	d := HDFP{
+		North:     math.Max(g.GetHC(x, y)-g.GetHC(x-1, y), g.GetHC(x-1, y)-g.GetHC(x, y)),
+		South:     math.Max(g.GetHC(x, y)-g.GetHC(x+1, y), g.GetHC(x+1, y)-g.GetHC(x, y)),
+		East:      math.Max(g.GetHC(x, y)-g.GetHC(x, y+1), g.GetHC(x, y+1)-g.GetHC(x, y)),
+		West:      math.Max(g.GetHC(x, y)-g.GetHC(x, y-1), g.GetHC(x, y-1)-g.GetHC(x, y)),
+		NorthEast: math.Max(g.GetHC(x, y)-g.GetHC(x+1, y-1), g.GetHC(x+1, y-1)-g.GetHC(x, y)),
+		NorthWest: math.Max(g.GetHC(x, y)-g.GetHC(x-1, y-1), g.GetHC(x-1, y-1)-g.GetHC(x, y)),
+		SouthEast: math.Max(g.GetHC(x, y)-g.GetHC(x+1, y+1), g.GetHC(x+1, y+1)-g.GetHC(x, y)),
+		SouthWest: math.Max(g.GetHC(x, y)-g.GetHC(x-1, y+1), g.GetHC(x-1, y+1)-g.GetHC(x, y)),
+	}
+	return &d
+}
+
 func (hd *HDFP) SetNorthMax(n float64) {
 	hd.North = math.Max(hd.North, n)
 }
@@ -113,17 +127,6 @@ func (hd *HDFP) CompareMin(hd2 *HDFP) {
 	hd.SetSouthEastMin(hd2.SouthEast)
 	hd.SetSouthWestMin(hd2.SouthWest)
 }
-
-// 	d := HDFP{
-//		North:     g.GetHC(x, y) - s[0][1],
-//		South:     g.GetHC(x, y) - s[2][1],
-//		East:      g.GetHC(x, y) - s[1][2],
-//		West:      g.GetHC(x, y) - s[1][0],
-//		NorthEast: g.GetHC(x, y) - s[0][2],
-//		NorthWest: g.GetHC(x, y) - s[0][0],
-//		SouthEast: g.GetHC(x, y) - s[2][2],
-//		SouthWest: g.GetHC(x, y) - s[2][0],
-//	}
 
 // 	d := HDFP{
 //		North:     h - s[0][1],
