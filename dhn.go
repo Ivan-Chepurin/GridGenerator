@@ -127,14 +127,3 @@ func (hd *HDFP) CompareMin(hd2 *HDFP) {
 	hd.SetSouthEastMin(hd2.SouthEast)
 	hd.SetSouthWestMin(hd2.SouthWest)
 }
-
-// 	d := HDFP{
-//		North:     h - s[0][1],
-//		South:     h - s[2][1],
-//		East:      h - s[1][2],
-//		West:      h - s[1][0],
-//		NorthEast: h - s[0][2],
-//		NorthWest: h - s[0][0],
-//		SouthEast: h - s[2][2],
-//		SouthWest: h - s[2][0],
-//	}

@@ -110,7 +110,7 @@ func (r *Renderer) HorizontalLine(h float64) bool {
 
 func (r *Renderer) GetPixelC(h float64) *color.RGBA {
 	if r.HorizontalLine(h) {
-		return &color.RGBA{A: r.alpha}
+		return r.BlackPoint()
 	}
 	if h <= r.maxWaterH {
 		return r.WaterPix(h)
@@ -131,7 +131,7 @@ func (r *Renderer) GetPixelC(h float64) *color.RGBA {
 		return r.SnowPix(h)
 	}
 	fmt.Println("ERROR")
-	return &color.RGBA{A: r.alpha}
+	return r.BlackPoint()
 }
 
 func (r *Renderer) ShorePix(h float64) *color.RGBA {
@@ -181,6 +181,10 @@ func (r *Renderer) SnowPix(h float64) *color.RGBA {
 		B: uint8(243 + (255-243)/(r.g.MaxH-r.maxMountH)*(h-r.maxMountH)),
 		A: r.alpha,
 	}
+}
+
+func (r *Renderer) BlackPoint() *color.RGBA {
+	return &color.RGBA{A: r.alpha}
 }
 
 func (r *Renderer) saveImage(name string) {

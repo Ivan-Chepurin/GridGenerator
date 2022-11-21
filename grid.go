@@ -60,7 +60,7 @@ func NewGrid(roughness float64, l, w, hrp int, powOn bool) *Grid {
 }
 
 func (g *Grid) RandHeight(size int) float64 {
-	r := g.Roughness * float64(rand.Intn(size)+1) * rand.Float64()
+	r := g.Roughness * (float64(rand.Intn(size)+1) + rand.Float64()) * rand.Float64()
 	if rand.Intn(100)+1 > g.HeightReductionPercentage {
 		return r
 	}
@@ -92,9 +92,10 @@ func (g *Grid) SetH(x, y int, h float64) {
 	if h < 0 {
 		h *= -1
 	}
-	if g.GetHC(x, y) == 0 {
-		g.grid[x+g.Length*y] = h
-	}
+	g.grid[x+g.Length*y] = h
+	//if g.GetHC(x, y) == 0 {
+	//	g.grid[x+g.Length*y] = h
+	//}
 }
 
 func (g *Grid) MakeLandscape() {
