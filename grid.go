@@ -20,8 +20,6 @@ type Grid struct {
 	MinH                      float64 `json:"MinH,"`
 	HeightReductionPercentage int     `json:"height_reduction_percentage"`
 	PowOn                     bool    `json:"pow_on"`
-	MaxHeightDiffs            HDFP    `json:"max_height_diffs"`
-	MinHeightDiffs            HDFP    `json:"min_height_diffs"`
 
 	grid []float64
 	mu   sync.Mutex
@@ -36,18 +34,6 @@ func NewGrid(roughness float64, l, w, hrp int, powOn bool) *Grid {
 		MinH:                      float64(w * l),
 		HeightReductionPercentage: hrp,
 		PowOn:                     powOn,
-
-		MaxHeightDiffs: HDFP{},
-		MinHeightDiffs: HDFP{
-			float64(w * l),
-			float64(w * l),
-			float64(w * l),
-			float64(w * l),
-			float64(w * l),
-			float64(w * l),
-			float64(w * l),
-			float64(w * l),
-		},
 	}
 	var cells []float64
 	for i := 0; i <= g.Width*g.Length; i++ {
@@ -153,20 +139,12 @@ func (g *Grid) diamond(x, y, size int, offset float64) {
 	g.SetH(x, y, ave+offset)
 }
 
-func (g *Grid) GetHDFP(x, y int) *HDFP {
-	d := NewHDFPbyGridPoint(g, x, y)
-	return d
-}
-
 func (g *Grid) PowLandscape() {
 	for y := 0; y < g.Length; y++ {
 		for x := 0; x < g.Width; x++ {
 			if g.PowOn {
 				g.SetH(x, y, math.Pow(g.GetHC(x, y), 2))
 			}
-			hdfp := g.GetHDFP(x, y)
-			g.MaxHeightDiffs.CompareMax(hdfp)
-			g.MinHeightDiffs.CompareMin(hdfp)
 			g.SetMaxH(g.GetHC(x, y))
 			g.SetMinH(g.GetHC(x, y))
 		}

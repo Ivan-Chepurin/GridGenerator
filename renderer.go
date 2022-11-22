@@ -29,9 +29,8 @@ type Renderer struct {
 	horizontalInterval int64 // интервал между линиями высот (x*1/350)
 	alpha              uint8 // прозрачность
 
-	g   *Grid      // рассчитанная карта высот
-	gic *GridImage // image
-	gir *GridImage // image
+	g  *Grid      // рассчитанная карта высот
+	gi *GridImage // image
 }
 
 func NewRenderer(
@@ -66,7 +65,7 @@ func NewRenderer(
 		horizontalInterval: horizontalInterval,
 		alpha:              0xff,
 		g:                  grid,
-		gic: &GridImage{
+		gi: &GridImage{
 			i: image.NewRGBA(image.Rectangle{
 				Min: image.Point{},
 				Max: image.Point{X: grid.Length, Y: grid.Width},
@@ -94,8 +93,7 @@ func (r *Renderer) Render() {
 func (r *Renderer) RenderRegion(sx, fx, sy, fy int, c chan int) {
 	for y := sy; y <= fy; y++ {
 		for x := sx; x <= fx; x++ {
-			r.gic.SetPoint(x, y, r.GetPixelC(r.g.GetHC(x, y)))
-			//r.gir.SetPoint(x, y, r.GetPixelR(x, y))
+			r.gi.SetPoint(x, y, r.GetPixelC(r.g.GetHC(x, y)))
 		}
 	}
 	c <- 1
@@ -189,7 +187,7 @@ func (r *Renderer) BlackPoint() *color.RGBA {
 
 func (r *Renderer) saveImage(name string) {
 	f, _ := os.Create(name + ".png")
-	err := png.Encode(f, r.gic.i)
+	err := png.Encode(f, r.gi.i)
 	if err != nil {
 		return
 	}
